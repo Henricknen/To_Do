@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset = "UTF-8">
+    <meta http-equiv = "X-UA-Compatible" content = "IE = edge">
+    <meta name = "viewport" content = "width=device-width, initial-scale=1.0">
+    <title>Lista de Tarefas</title>
+    <style>
+        .task {
+            margin-bottom: 5px;
+        }
+        .completed {
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lista de Tarefas</h1>
+
+    <div id = "taskList">
+        <!-- Tarefas serão adicionadas dinamicamente aqui -->
+    </div>
+
+    <textarea id = "taskInput"></textarea>
+    <!-- <input type = "text"> -->
+    <button onclick = "addTask()">Adicionar Tarefa</button>
+
+    <script>
+        // Carrega tarefas do localStorage quando a página é carregada
+        window.onload = function() {
+            loadTasks();
+        };
+
+        function addTask() {
+            const taskInput = document.getElementById("taskInput");
+            const taskList = document.getElementById("taskList");
+
+            if (taskInput.value.trim() !== "") {
+                const task = document.createElement("div");
+                task.className = "task";
+                task.innerHTML = `
+                    <input type="checkbox" onchange="toggleTaskCompletion(this)">
+                    <span>${taskInput.value}</span>
+                    <button onclick="editTask(this)">Editar</button>
+                    <button onclick="deleteTask(this)">Excluir</button>
+                `;
+                taskList.appendChild(task);
+
+                // Adiciona a tarefa ao localStorage
+                saveTasks();
+
+                taskInput.value = "";
+            }
+        }
+
+        function toggleTaskCompletion(checkbox) {
+            const taskText = checkbox.nextElementSibling;
+            if (checkbox.checked) {
+                taskText.classList.add("completed");
+            } else {
+                taskText.classList.remove("completed");
+            }
+
+            // Atualiza o estado de conclusão da tarefa no localStorage
+            saveTasks();
+        }
+
+        function editTask(editButton) {
+            const taskText = editButton.previousElementSibling;
+            const newText = prompt("Editar Tarefa", taskText.innerText);
+            if (newText !== null) {
+                taskText.innerText = newText;
+
+                // Atualiza o localStorage
+                saveTasks();
+            }
+        }
+
+        function deleteTask(deleteButton) {
+            const task = deleteButton.parentElement;
+            task.remove();
+
+            // Atualiza o localStorage
+            saveTasks();
+        }
+
+        function saveTasks() {
+            const tasks = [];
+            const taskElements = document.querySelectorAll(".task");
+            taskElements.forEach(taskElement => {
+                const taskText = taskElement.querySelector("span").innerText;
+                const taskCompleted = taskElement.querySelector("input[type=checkbox]").checked;
+                tasks.push({ text: taskText, completed: taskCompleted });
+            });
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem("tasks"));
+            if (tasks) {
+                const taskList = document.getElementById("taskList");
+                tasks.forEach(task => {
+                    const newTask = document.createElement("div");
+                    newTask.className = "task";
+                    if (task.completed) {
+                        newTask.innerHTML = `
+                            <input type="checkbox" checked onchange="toggleTaskCompletion(this)">
+                            <span class="completed">${task.text}</span>
+                            <button onclick="editTask(this)">Editar</button>
+                            <button onclick="deleteTask(this)">Excluir</button>
+                        `;
+                    } else {
+                        newTask.innerHTML = `
+                            <input type="checkbox" onchange="toggleTaskCompletion(this)">
+                            <span>${task.text}</span>
+                            <button onclick="editTask(this)">Editar</button>
+                            <button onclick="deleteTask(this)">Excluir</button>
+                        `;
+                    }
+                    taskList.appendChild(newTask);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
